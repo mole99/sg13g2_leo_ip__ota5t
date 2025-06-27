@@ -16,6 +16,21 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      - name: Install the PDK
+        run: |
+          pip3 install ciel
+          ciel enable --pdk-family ihp-sg13g2 --pdk-root ${{ github.workspace }}/.ciel-ihp-sg13g2 60361e2d3799fdc9de3d1b77f717cd008958f1a4
+          echo "PDK_ROOT=${{ github.workspace }}/.ciel-ihp-sg13g2" >> $GITHUB_ENV
+          echo "PDK=ihp-sg13g2" >> $GITHUB_ENV
+      - name: Compile Verilog-A models
+        run: |
+          wget https://openva.fra1.cdn.digitaloceanspaces.com/openvaf_23_5_0_linux_amd64.tar.gz --directory-prefix ${{ github.workspace }}/openvaf
+          tar -xzf ${{ github.workspace }}/openvaf/openvaf_23_5_0_linux_amd64.tar.gz -C ${{ github.workspace }}/openvaf/
+          cp ${{ github.workspace }}/openvaf/openvaf $HOME/.local/bin
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          cd $PDK_ROOT/$PDK/libs.tech/verilog-a/
+          chmod +x openvaf-compile-va.sh
+          ./openvaf-compile-va.sh
       # Run CACE on the design
       - name: Setup Environment and Run CACE
         uses: mole99/cace-action@main
